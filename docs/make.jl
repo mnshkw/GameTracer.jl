@@ -8,7 +8,7 @@ makedocs(;
     authors="mnshkw <mao.nishikawa24@gmail.com> and contributors",
     sitename="GameTracer.jl",
     format=Documenter.HTML(;
-        canonical="https://your-github-username.github.io/GameTracer.jl",
+        canonical="https://mnshkw.github.io/GameTracer.jl",
         edit_link="main",
         assets=String[],
     ),
@@ -18,6 +18,6 @@ makedocs(;
 )
 
 deploydocs(;
-    repo="github.com/your-github-username/GameTracer.jl",
+    repo="github.com/mnshkw/GameTracer.jl",
     devbranch="main",
 )
