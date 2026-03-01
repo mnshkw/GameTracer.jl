@@ -137,12 +137,10 @@ function _ipa(
         num_players, actions_c, payoffs, ray, zh, alpha, fuzz, ans
     )
 
-    converged = ret >= 0
-    if ret < 0
-        @warn "IPA returned error code $ret"
-    end
+    ret < 0 && error("IPA returned shim error code $ret")
+    ret == 0 && error("IPA failed: no equilibrium found (ret=0)")  
 
-    return (ans, converged)
+    return ans
 end
 
 function _gnm(
@@ -173,18 +171,15 @@ function _gnm(
         lambdamin, Cint(wobble), threshold
     )
 
-    if num_eq < 0
-        @warn"GNM returned error code $num_eq"
-        return Vector{Vector{Float64}}()
-    end
+    # ret < 0: shim error, answers == NULL
+    num_eq < 0 && error("GNM returned shim error code $num_eq")
 
+    # ret == 0: 0 equilibria, answers == NULL
     num_eq == 0 && return Vector{Vector{Float64}}()
-
+    
+    # ret > 0: num_eq equilibria, answers is malloc'd buffer
     ptr = answers_ref[]
-    if ptr == C_NULL
-        @warn "GNM returned num_eq=$num_eq but answers pointer was NULL"
-        return Vector{Vector{Float64}}()
-    end
+    ptr != C_NULL || error("GNM returned num_eq=$num_eq but answers pointer was NULL")
 
     answers = try
         answers_view = unsafe_wrap(Array, ptr, (M, Int(num_eq)); own=false)
