@@ -21,8 +21,10 @@ export IPAResult, GNMResult
 # Fields TBD
 
 """
-struct IPAResult
-    # TBD
+# [TODO] TBD: Still under discussion
+struct IPAResult{N}
+    equilibrium::NTuple{N, Vector{Float64}}
+    nums_actions::NTuple{N, Int}
 end
 
 """
@@ -31,8 +33,10 @@ end
 # Fields TBD
 
 """
-struct GNMResult
-    # TBD
+# [TODO] TBD: Still under discussion
+struct GNMResult{N}
+    equilibria::Vector{NTuple{N, Vector{Float64}}}
+    nums_actions::NTuple{N, Int}
 end
 
 """
@@ -49,9 +53,24 @@ end
 # References
 
 """
-function ipa_solve(g::NormalFormGame)
+# [TODO] TBD: Still under discussion
+function ipa_solve(
+    g::NormalFormGame;
+    ray::Union{Vector{Float64}, Nothing} = nothing,
+    alpha::Float64 = 0.02,
+    fuzz::Float64 = 1e-12,
+)
+    p = GAMPayoffVector(Float64, g)
+    M = sum(p.nums_actions)
+
+    if ray === nothing
+        ray = randn(M)
+    end
+    zh = copy(ray)
     
-    return IPAResult()
+    ans = _ipa(p.nums_actions, p.payoffs, ray, zh, alpha, fuzz)
+    
+    return IPAResult(p.nums_actions, ans)
 end
 
 
@@ -69,9 +88,30 @@ end
 # References
 
 """
-function gnm_solve(g::NormalFormGame)
+# [TODO] TBD: Still under discussion
+function gnm_solve(
+    g::NormalFormGame;
+    ray::Union{Vector{Float64}, Nothing} = nothing,
+    steps::Integer = 100,
+    fuzz::Float64 = 1e-12,
+    lnmfreq::Integer = 3,
+    lnmmax::Integer = 10,
+    lambdamin::Float64 = -10.0,
+    wobble::Integer = 0,
+    threshold::Float64 = 1e-2
+)
+    p = GAMPayoffVector(Float64, g)
+    M = sum(p.nums_actions)
+
+    if ray === nothing
+        ray = randn(M)
+    end
+
+    equilibria = _gnm(p.nums_actions, p.payoffs, ray,
+                      steps, fuzz, lnmfreq, lnmmax, 
+                      lambdamin, wobble, threshold)
     
-    return GNMResult()
+    return GNMResult(equilibria, p.nums_actions)
 end
 
 
