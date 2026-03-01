@@ -4,8 +4,13 @@ authors = ["mnshkw <https://github.com/mnshkw> and contributors"]
 version = "1.0.0-DEV"
 license = "GPL-3.0-only"
 
+[deps]
+GameTheory = "64a4ffa8-f47c-4a47-8dad-aee7aadc3b51"
+# gametracer_jll = "<UUID>" # [TODO] update after Phase B is complete
+
 [compat]
-julia = "1.10.10"
+GameTheory = "0.4"
+julia = "1.10"
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
