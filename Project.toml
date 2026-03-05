@@ -10,4 +10,5 @@ GameTheory = "64a4ffa8-f47c-4a47-8dad-aee7aadc3b51"
 
 [compat]
 GameTheory = "0.4"
+Random = "1.11.0"
 julia = "1.10"
