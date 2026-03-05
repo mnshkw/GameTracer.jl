@@ -1,6 +1,7 @@
 module GameTracer
 
 using GameTheory: NormalFormGame, GAMPayoffVector
+using Random
 
 # ------------------------------------------------------------------
 # Library Path
