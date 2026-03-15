@@ -61,6 +61,16 @@ function ipa_solve(
     fuzz::Real = 1e-6,
 ) where {N}
     M = sum(g.nums_actions)
+
+    length(ray) == M || throw(ArgumentError("length(ray) must be sum of g.nums_actions"))
+    length(zh) == M || throw(ArgumentError("length(zh) must be sum of g.nums_actions"))
+    all(isfinite, ray) || throw(ArgumentError("ray must contain finite values"))
+    all(isfinite, zh) || throw(ArgumentError("zh must contain finite values"))
+    isfinite(alpha) && alpha > 0 || 
+        throw(ArgumentError("alpha must be a positive finite value"))
+    isfinite(fuzz) && fuzz > 0 || 
+        throw(ArgumentError("fuzz must be a positive finite value"))
+
     actions = Cint[g.nums_actions...]
     p = GAMPayoffVector(Cdouble, g)
     ray = convert(Vector{Cdouble}, ray)
