@@ -15,6 +15,7 @@ const libgametracer = "/tmp/gametracer_prefix/lib/libgametracer.dylib"
 # ------------------------------------------------------------------
 export ipa_solve, gnm_solve
 
+
 """
     IPAResult
 
@@ -31,10 +32,9 @@ end
 # Fields TBD
 
 """
-# [TODO] TBD: Still under discussion
 struct GNMResult{N}
     NEs::Vector{NTuple{N, Vector{Float64}}}
-    nums_actions::NTuple{N, Int}
+    num_NEs::Int
 end
 
 
@@ -55,16 +55,20 @@ end
 function ipa_solve(
     rng::AbstractRNG,
     g::NormalFormGame{N};
-    ray::Vector{Float64} = rand(rng, sum(g.nums_actions)),
-    init::Vector{Float64} = ones(sum(g.nums_actions)),
-    alpha::Float64 = 0.02,
-    fuzz::Float64 = 1e-6,
+    ray::AbstractVector{<:Real} = rand(rng, sum(g.nums_actions)),
+    zh::AbstractVector{<:Real} = ones(sum(g.nums_actions)),
+    alpha::Real = 0.02,
+    fuzz::Real = 1e-6,
 ) where {N}
+    M = sum(g.nums_actions)
     actions = Cint[g.nums_actions...]
-    p = GAMPayoffVector(Float64, g)
-    M = sum(actions)
-    out = Vector{Float64}(undef, M)
-    out, ret = ipa!(N, actions, p.payoffs, ray, init, alpha, fuzz, out)
+    p = GAMPayoffVector(Cdouble, g)
+    ray = convert(Vector{Cdouble}, ray)
+    zh = Vector{Cdouble}(zh)  # Copy
+    out = Vector{Cdouble}(undef, M)
+    out, ret = ipa!(
+        N, actions, p.payoffs, ray, zh, Cdouble(alpha), Cdouble(fuzz), out
+    )
 
     NE = _get_action_profile(out, g.nums_actions)
 
@@ -89,37 +93,35 @@ ipa_solve(g::NormalFormGame; kwargs...) =
 # References
 
 """
-# [TODO] TBD: Still under discussion
 function gnm_solve(
     rng::AbstractRNG,
-    g::NormalFormGame;
-    ray::Union{Vector{Float64}, Nothing} = nothing,
+    g::NormalFormGame{N};
+    ray::AbstractVector{<:Real} = rand(rng, sum(g.nums_actions)),
     steps::Integer = 100,
-    fuzz::Float64 = 1e-6,
+    fuzz::Real = 1e-12,
     lnmfreq::Integer = 3,
     lnmmax::Integer = 10,
-    lambdamin::Float64 = -10.0,
+    lambdamin::Real = -10.0,
     wobble::Bool = false,
-    threshold::Float64 = 1e-2
-)
-    p = GAMPayoffVector(Float64, g)
-    M = sum(p.nums_actions)
+    threshold::Real = 1e-2
+) where {N}
+    actions = Cint[g.nums_actions...]
+    p = GAMPayoffVector(Cdouble, g)
+    ray = convert(Vector{Cdouble}, ray)
+    answers, ret = gnm(
+        N, actions, p.payoffs, ray,
+        steps, Cdouble(fuzz), lnmfreq, lnmmax,
+        Cdouble(lambdamin), wobble, Cdouble(threshold)
+    )
 
-    if ray === nothing
-        ray = rand(rng, M)
-    end
-
-    equilibria_flat = gnm(p.nums_actions, p.payoffs, ray,
-                      steps, fuzz, lnmfreq, lnmmax, 
-                      lambdamin, wobble, threshold)
+    NEs = _get_action_profiles(answers, g.nums_actions)
     
-    NEs = [_slice_actions(ans, p.nums_actions) for ans in equilibria_flat]
-    
-    return GNMResult(NEs, p.nums_actions)
+    return GNMResult(NEs, Int(ret))
 end
 
 gnm_solve(g::NormalFormGame; kwargs...) = 
     gnm_solve(Random.GLOBAL_RNG, g; kwargs...)
+
 
 # ------------------------------------------------------------------
 # Private API (C ABI wrappers)
@@ -211,9 +213,9 @@ end
 
 function _get_action_profiles(x::AbstractMatrix{T},
                               nums_actions::NTuple{N,Integer}) where {N,T}
-    num_eq = size(x, 2)
-    out = Vector{NTuple{N,Vector{T}}}(undef, num_eq)
-    @inbounds for j in 1:num_eq
+    num_NEs = size(x, 2)
+    out = Vector{NTuple{N,Vector{T}}}(undef, num_NEs)
+    @inbounds for j in 1:num_NEs
         out[j] = _get_action_profile(@view(x[:, j]), nums_actions)
     end
     return out
