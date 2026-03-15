@@ -36,6 +36,20 @@ using Test
     g[2, 1, 2] = 3, 4, 4
     push!(gs, g)
 
+    @testset "ipa_solve input validation" begin
+        g = gs[1]
+        seed = 1234
+        rng = MersenneTwister(seed)
+        M = sum(g.nums_actions)
+        @test_throws ArgumentError ipa_solve(rng, g, ray=zeros(M - 1))
+        @test_throws ArgumentError ipa_solve(rng, g, zh=ones(M - 1))
+        @test_throws ArgumentError ipa_solve(rng, g, ray=fill(NaN, M))
+        @test_throws ArgumentError ipa_solve(rng, g, zh=fill(Inf, M))
+        @test_throws ArgumentError ipa_solve(rng, g, alpha=-0.1)
+        @test_throws ArgumentError ipa_solve(rng, g, alpha=1.5)
+        @test_throws ArgumentError ipa_solve(rng, g, fuzz=0.0)
+    end
+
     @testset "ipa_solve" begin
         seed = 1234
         rng = MersenneTwister(seed)
