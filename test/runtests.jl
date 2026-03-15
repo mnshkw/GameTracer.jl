@@ -4,6 +4,25 @@ using Random
 using Test
 
 @testset "GameTracer.jl" begin
+    @testset "action-profile helpers" begin
+        num_actions = (2, 3)
+        x = [0.2, 0.8, 0.5, 0.3, 0.2]
+        @test GameTracer._get_action_profile(x, num_actions) ==
+              ([0.2, 0.8], [0.5, 0.3, 0.2])
+        
+        X = [
+            0.2 0.5
+            0.8 0.3 
+            0.5 0.1
+            0.3 0.2
+            0.2 0.7
+        ]
+        @test GameTracer._get_action_profiles(X, num_actions) == [
+            ([0.2, 0.8], [0.5, 0.3, 0.2]),
+            ([0.5, 0.3], [0.1, 0.2, 0.7])
+        ]
+    end
+
     gs = []
 
     g = NormalFormGame(Player([3 3; 2 5; 0 6]),
