@@ -119,6 +119,20 @@ function gnm_solve(
     wobble::Bool = false,
     threshold::Real = 1e-2
 ) where {N}
+    M = sum(g.nums_actions)
+
+    length(ray) == M || throw(ArgumentError("length(ray) must be sum of g.nums_actions"))
+    all(isfinite, ray) || throw(ArgumentError("ray must contain finite values"))
+    steps > 0 || throw(ArgumentError("steps must be a positive integer"))
+    isfinite(fuzz) && fuzz > 0 || 
+        throw(ArgumentError("fuzz must be a positive finite value"))
+    lnmfreq > 0 || throw(ArgumentError("lnmfreq must be a positive integer"))
+    lnmmax >= 0 || throw(ArgumentError("lnmmax must be a nonnegative integer"))
+    isfinite(lambdamin) && lambdamin < 0 || 
+        throw(ArgumentError("lambdamin must be a finite value"))
+    isfinite(threshold) && threshold > 0 || 
+        throw(ArgumentError("threshold must be a positive finite value"))
+
     actions = Cint[g.nums_actions...]
     p = GAMPayoffVector(Cdouble, g)
     ray = convert(Vector{Cdouble}, ray)
