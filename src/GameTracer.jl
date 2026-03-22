@@ -66,6 +66,33 @@ approximation (IPA) algorithm (Govindan and Wilson, 2004).
     - `res.NE`: Tuple of computed Nash equilibrium mixed actions.
     - `res.ret_code`: Return code from the underlying C shim.
 
+# Examples
+
+Consider the following 3x2 game from von Stengel (2007):
+
+```julia
+julia> using GameTheory, GameTracer, Random
+
+julia> player1 = Player([3 3; 2 5; 0 6]);  
+
+julia> player2 = Player([3 2 3; 2 6 1]);
+
+julia> g = NormalFormGame(player1, player2);
+
+julia> ray = [0.87, 0.04, 0.81, 0.97, 0.17];
+
+julia> res = ipa_solve(g; ray=ray);
+
+julia> println(res.ret_code > 0)
+true
+
+julia> println(length(res.NE))
+2
+
+julia> println(is_nash(g, res.NE; tol=1e-6))
+true
+```
+
 # References
 - S. Govindan and R. Wilson, "Computing Nash equilibria by iterated
   polymatrix approximation," Journal of Economic Dynamics and Control, 28 (2004),
@@ -143,6 +170,38 @@ algorithm (Govindan and Wilson, 2003).
     the computed equilibria.
     - `res.NEs`: Vector of computed Nash equilibrium mixed actions.
     - `res.ret_code`: Return code from the underlying C shim.
+
+# Examples
+
+Consider the following 2x2x2 game with 9 Nash equilibria from McKelvey and 
+    McLennan (1996):
+
+```julia
+julia> using GameTheory, GameTracer, Random
+
+julia> g = NormalFormGame((2, 2, 2));
+
+julia> g[1, 1, 1] = 9, 8, 12;
+
+julia> g[2, 2, 1] = 9, 8, 2;
+
+julia> g[1, 2, 2] = 3, 4, 6;
+
+julia> g[2, 1, 2] = 3, 4, 4;
+
+julia> ray = [0.87, 0.04, 0.81, 0.97, 0.17, 0.04]
+
+julia> res = gnm_solve(g; ray=ray);
+
+julia> println(res.ret_code)
+9
+
+julia> println(length(res.NEs))
+9
+
+julia> println(all(NE -> is_nash(g, NE), res.NEs))
+true
+```
 
 # References
 - S. Govindan and R. Wilson, "A global Newton method to compute Nash 
