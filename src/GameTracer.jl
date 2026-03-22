@@ -16,10 +16,9 @@ export ipa_solve, gnm_solve
 Result of [`ipa_solve`](@ref).
 
 # Fields
-- `NE::NTuple{N, Vector{Float64}}`: Mixed-action profile of a Nash equilibrium 
-    computed by `ipa_solve`, stored as one probability vector per player.
-- `ret_code::Int`: Raw positive return value from the underlying C function. 
-    See `ipa_solve` for details.
+- `NE::NTuple{N, Vector{Float64}}`: Tuple of computed Nash equilibrium mixed 
+    actions.
+- `ret_code::Int`: Return code from the underlying C shim.
 """
 struct IPAResult{N}
     NE::NTuple{N, Vector{Float64}}
@@ -32,11 +31,9 @@ end
 Result of [`gnm_solve`](@ref).
 
 # Fields
-- `NEs::Vector{NTuple{N, Vector{Float64}}}`: Mixed-action profiles of Nash 
-    equilibria computed by `gnm_solve`.
-- `ret_code::Int`: Raw return value from the underlying C function. In the 
-    current implementation, this is equal to the number of equilibria returned 
-    in `NEs`. See `gnm_solve` for details.
+- `NEs::Vector{NTuple{N, Vector{Float64}}}`: Vector of computed Nash equilibrium 
+    mixed actions.
+- `ret_code::Int`: Return code from the underlying C shim.
 """
 struct GNMResult{N}
     NEs::Vector{NTuple{N, Vector{Float64}}}
@@ -45,32 +42,29 @@ end
 
 
 """
-    ipa_solve(rng, g; 
-              ray = rand(rng, sum(g.nums_actions)), 
-              z_init = ones(sum(g.nums_actions)), 
-              alpha = 0.02,
-              fuzz = 1e-6)
+    ipa_solve([rng=Random.GLOBAL_RNG, ]g; kwargs...)
 
 Compute one mixed-action Nash equilibrium of `g` with the iterated polymatrix 
 approximation (IPA) algorithm (Govindan and Wilson, 2004).
 
 # Arguments
-- `rng::AbstractRNG`: Random number generator used.
+- `rng::AbstractRNG`: Random number generator used when the default `ray` is 
+    used.
 - `g::NormalFormGame`: A `NormalFormGame` instance with `N >=2` players.
-- `ray::AbstractVector{<:Real}`: Pertubation ray. Its length must 
-    correspond to `sum(g.nums_actions)`.
-- `z_init::AbstractVector{<:Real}`: Initial point for the iteration. Its 
-    length must correspond to `sum(g.nums_actions)`.
-- `alpha::Real`: Step size parameter. Must satisfy `0 < alpha < 1`.
-- `fuzz::Real`: Convergence tolerance for an equilibrium.
+
+# Keyword Arguments
+- `ray::AbstractVector{<:Real} = rand(rng, sum(g.nums_actions))`: 
+    Pertubation ray. Its length must equal `sum(g.nums_actions)`.
+- `z_init::AbstractVector{<:Real} = ones(sum(g.nums_actions))`: 
+    Initial point for the iteration. Its length must equal `sum(g.nums_actions)`.
+- `alpha::Real = 0.02`: Step size parameter. Must satisfy `0 < alpha < 1`.
+- `fuzz::Real = 1e-6`: Cutoff accuracy for the computed equilibrium.
 
 # Returns
 - `res::IPAResult{N}`: Result object containing information about 
-    the computed equilibrium and status code returned from the underlying C 
-    routine. See [`IPAResult`](@ref) for details.
-
-# Notes
-* Pass an explicit `rng` or `ray` to obtain reproducible results.
+    the computed equilibrium.
+    - `res.NE`: Tuple of computed Nash equilibrium mixed actions.
+    - `res.ret_code`: Return code from the underlying C shim.
 
 # References
 - S. Govindan and R. Wilson, "Computing Nash equilibria by iterated
@@ -117,45 +111,38 @@ end
 
 
 """
-    gnm_solve(rng, g;
-              ray = rand(rng, sum(g.nums_actions)),
-              steps = 100,
-              fuzz = 1e-12,
-              lnmfreq = 3,
-              lnmmax = 10,
-              lambdamin = -10.0,
-              wobble = false,
-              threshold = 1e-2)
+    gnm_solve([rng=Random.GLOBAL_RNG, ]g; kwargs...)
 
 Compute mixed-action Nash equilibria of `g` with the global Newton method (GNM) 
 algorithm (Govindan and Wilson, 2003). 
 
 # Arguments
-- `rng::AbstractRNG`: Random number generator used.
+- `rng::AbstractRNG`: Random number generator used when the default `ray` is 
+    used.
 - `g::NormalFormGame`: A `NormalFormGame` instance with `N >=2` players.
-- `ray::AbstractVector{<:Real}`: Pertubation ray. Its length must 
-    correspond to `sum(g.nums_actions)`.
-- `steps::Integer`: Maximum number of steps; higher values of this parameter 
-    slow GNM down, but may help it avoid getting off the path.
-- `fuzz::Real`: Convergence tolerance for an equilibrium.
-- `lnmfreq::Integer`: Frequency of the local Newton method (LNM) subroutines.
-    Higher values decreases accumulated error.
-- `lnmmax::Integer`: Maximum number of iterations within the LNM algorithm.
-- `lambdamin::Real`: Minimum lambda value for the LNM algorithm. The algorithm
-    terminates if lambda falls below this value. Must be negative.
-- `wobble::Bool`: Whether to use "wobbles" of the perturbation vector to remove
-    accumulated errors.
-- `threshold::Real`: The equilibrium error tolerance for doing a wobble. If 
-    wobbles are disabled, the GNM algorithm terminates if the error reaches this
-    threshold.
+
+# Keyword Arguments
+- `ray::AbstractVector{<:Real} = rand(rng, sum(g.nums_actions))`: 
+    Pertubation ray. Its length must equal `sum(g.nums_actions)`.
+- `steps::Integer = 100`: Maximum number of steps.
+- `fuzz::Real = 1e-12`: Cutoff value for a variety of things.
+- `lnmfreq::Integer = 3`: Frequency parameter. A Local Newton Method subroutine 
+    will be run every LNMFreq steps to decrease accumulated errors.
+- `lnmmax::Integer = 10`: Maximum number of iterations within the LNM algorithm.
+- `lambdamin::Real = -10.0`: Minimum lambda value for the LNM algorithm. The 
+    algorithm terminates if lambda falls below this value. Must be negative.
+- `wobble::Bool = false`: Whether to use "wobbles" of the perturbation vector to
+     remove accumulated errors. This removes the theoretical guarantee of 
+     convergence, but in practice may help keep GNM on the path 
+- `threshold::Real = 1e-2`: The equilibrium error tolerance for doing a wobble. 
+    If wobbles are disabled, the GNM algorithm terminates if the error reaches 
+    this threshold.
 
 # Returns
 - `res::GNMResult{N}`: Result object containing information about 
-    the computed equilibria and status code returned from the underlying C 
-    routine. See [`GNMResult`](@ref) for details.
-
-# Notes
-* Pass an explicit `rng` or `ray` to obtain reproducible results.
+    the computed equilibria.
+    - `res.NEs`: Vector of computed Nash equilibrium mixed actions.
+    - `res.ret_code`: Return code from the underlying C shim.
 
 # References
 - S. Govindan and R. Wilson, "A global Newton method to compute Nash 
