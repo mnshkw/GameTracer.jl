@@ -5,9 +5,9 @@
 [![Build Status](https://github.com/mnshkw/GameTracer.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/mnshkw/GameTracer.jl/actions/workflows/CI.yml?query=branch%3Amain)
 [![License: GPL v3+](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 
-A Julia wrapper using [`gametracer`](https://github.com/QuantEcon/gametracer), 
+A Julia wrapper for [gametracer](https://github.com/QuantEcon/gametracer), 
     providing IPA and GNM Nash equilibrium solvers for 
-    [`GameTheory.jl`](https://github.com/QuantEcon/GameTheory.jl) normal-form 
+    [GameTheory.jl](https://github.com/QuantEcon/GameTheory.jl) normal-form 
     games.
 
 ## Example usage
