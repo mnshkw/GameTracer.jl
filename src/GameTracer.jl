@@ -42,7 +42,7 @@ end
 
 
 """
-    ipa_solve([rng=Random.GLOBAL_RNG, ]g; kwargs...)
+    ipa_solve([rng=Random.GLOBAL_RNG], g; kwargs...)
 
 Compute one mixed-action Nash equilibrium of `g` with the iterated polymatrix 
 approximation (IPA) algorithm (Govindan and Wilson, 2004).
@@ -138,7 +138,7 @@ end
 
 
 """
-    gnm_solve([rng=Random.GLOBAL_RNG, ]g; kwargs...)
+    gnm_solve([rng=Random.GLOBAL_RNG], g; kwargs...)
 
 Compute mixed-action Nash equilibria of `g` with the global Newton method (GNM) 
 algorithm (Govindan and Wilson, 2003). 
