@@ -213,8 +213,7 @@ julia> println(length(res2.NEs))
 
 In the example above, the second call finds 2 equilibria while the first call 
 finds 7. Different rays may yield different equilibria, or different numbers of 
-equilibria, if found. `gnm_solve` is not guaranteed to find an equilibrium on an
- arbitrary run.
+equilibria, if found. `gnm_solve` is not guaranteed to find an equilibrium on an arbitrary run.
 
 # References
 - S. Govindan and R. Wilson, "A global Newton method to compute Nash 
