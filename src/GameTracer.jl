@@ -64,9 +64,9 @@ polymatrix approximation (IPA) algorithm (Govindan and Wilson, 2004).
   ray for the IPA homotopy. Its length must equal `sum(g.nums_actions)`, and
   entries are interpreted in player-concatenated order. Different rays may lead
   to different equilibria.
-- `z_init::AbstractVector{<:Real} = ones(sum(g.nums_actions))`: Initial
+- `zh_init::AbstractVector{<:Real} = ones(sum(g.nums_actions))`: Initial
   condition for ``\hat{z}``. Its length must equal `sum(g.nums_actions)`.
-  IPA starts with the projection of `z_init` onto the mixed-action simplex
+  IPA starts with the projection of `zh_init` onto the mixed-action simplex
   product.
 - `alpha::Real = 0.02`: Step size fraction of an update of ``\hat{z}``. Must
   satisfy `0 < alpha < 1`.
@@ -142,7 +142,7 @@ function ipa_solve(
     rng::AbstractRNG,
     g::NormalFormGame{N};
     ray::AbstractVector{<:Real} = rand(rng, sum(g.nums_actions)),
-    z_init::AbstractVector{<:Real} = ones(sum(g.nums_actions)),
+    zh_init::AbstractVector{<:Real} = ones(sum(g.nums_actions)),
     alpha::Real = 0.02,
     fuzz::Real = 1e-6,
 ) where {N}
@@ -150,18 +150,18 @@ function ipa_solve(
 
     length(ray) == M ||
         throw(ArgumentError("length(ray) must equal sum(g.nums_actions)"))
-    length(z_init) == M ||
-        throw(ArgumentError("length(z_init) must equal sum(g.nums_actions)"))
+    length(zh_init) == M ||
+        throw(ArgumentError("length(zh_init) must equal sum(g.nums_actions)"))
     0 < alpha < 1 ||
         throw(ArgumentError("alpha must satisfy 0 < alpha < 1"))
 
     actions = Cint[g.nums_actions...]
     p = GAMPayoffVector(Cdouble, g)
     ray = convert(Vector{Cdouble}, ray)
-    z_init = Vector{Cdouble}(z_init)  # Copy
+    zh = Vector{Cdouble}(zh_init)  # Copy
     out = Vector{Cdouble}(undef, M)
     out, ret_code = ipa!(
-        N, actions, p.payoffs, ray, z_init, Cdouble(alpha), Cdouble(fuzz), out
+        N, actions, p.payoffs, ray, zh, Cdouble(alpha), Cdouble(fuzz), out
     )
 
     NE = _get_action_profile(out, g.nums_actions)
